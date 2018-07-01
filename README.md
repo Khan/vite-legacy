@@ -2,9 +2,25 @@
 
 `vite` is a fast test environment focused on visual regression testing.
 
+## Quickstart
+
+- install the extension folder as a unpackage extension in Chrome
+  - go to `chrome://extensions/`
+  - click `Load Unpacked`
+  - select the `extensions` folder in this repo
+- `yarn start`
+
+## Devevelopment Guide
+
+- run `yarn webpack`
+- changes to anything in the `extensions` folder will require reloading
+  the extension in `chrome://extensions/`
+- you can "Inspect views `background page`" to debug background.js
+
 ## Roadmap
 
 - screenshot elements
+- Firefox support
 - use docker for reproducible runs
 - record and playback user interaction
 - playback user interactions faster than real-time (mock out `setTimeout()` and `setInterval()`)
