@@ -4,15 +4,16 @@
 
 ## Quickstart
 
+- `yarn build`
 - install the extension folder as a unpackage extension in Chrome
   - go to `chrome://extensions/`
   - click `Load Unpacked`
-  - select the `extensions` folder in this repo
+  - select the `extensions/dist` folder in this repo
 - `yarn start`
 
 ## Devevelopment Guide
 
-- run `yarn webpack`
+- run `yarn watch`
 - changes to anything in the `extensions` folder will require reloading
   the extension in `chrome://extensions/`
 - you can "Inspect views `background page`" to debug background.js

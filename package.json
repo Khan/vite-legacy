@@ -15,6 +15,7 @@
     "aphrodite": "^2.2.2",
     "babel": "^6.23.0",
     "express": "^4.16.3",
+    "frametalk": "https://github.com/Khan/frametalk.git#uniqid",
     "png-crop": "^0.0.2",
     "react": "^16.4.1",
     "react-dom": "^16.4.1"
