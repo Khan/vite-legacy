@@ -34,9 +34,6 @@ function startTest() {
         },
     ];
 
-    // TODO(kevinb): allow for different functions for individual tests so that
-    // we can use this for KaTeX as well
-
     // TODO(kevinb): split this up into render and screenshotting functionality
     // this will allow us to eventually inject logic to simulate events and then
     // take additional screenshots whenever the DOM changes.

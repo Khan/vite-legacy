@@ -1,3 +1,4 @@
 node_modules
 screenshots/*.png
 extension/dist/content.js
+demos/*/dist/*.js
