@@ -5,9 +5,6 @@ chrome.runtime.onInstalled.addListener(function() {
         chrome.tabs.captureVisibleTab(sender.tab.windowId, {format: "png"}, dataUrl => {
             console.log("taking screenshot");
 
-            // tell content.js that we've successfully taken the screenshot
-            sendResponse();
-
             // TODO(kevinb): get hostname from content.js script
             fetch("http://localhost:3000/screenshot", {
                 method: "POST",
@@ -21,8 +18,11 @@ chrome.runtime.onInstalled.addListener(function() {
                     bounds: message.bounds,
                 }),
             }).then(() => {
+                // tell content.js that we've successfully taken the screenshot
+                sendResponse();
                 console.log("message sent to /screenshot");
             });
+            // TODO(kevinb): send a response if the POST fails
         });
 
         // indicate that response will be asynchronous

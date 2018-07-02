@@ -6,7 +6,7 @@ const PNGCrop = require("png-crop");
 const app = express();
 
 app.use(express.static("."));
-app.use(express.json());
+app.use(express.json({limit: '5mb'}));
 
 app.post("/screenshot", (req, res) => {
     const data = req.body.dataUrl.replace(/^data:image\/png;base64,/, "");

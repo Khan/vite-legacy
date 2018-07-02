@@ -1,26 +1,27 @@
 import frametalk from "frametalk";
 import katex from "katex";
 
+import testData from "./test-data";
+
 const container = document.querySelector("#container");
 
 function startTest() {
     const startTime = Date.now();
-    const tests = [
-        // TODO(kevinb): use https://github.com/typekit/webfontloader
-        // to force fonts to be loaded before running tests
-        {
-            filename: "throwaway.png",
-            tex: "\\frac{x}{y}",
-        },
-        {
-            filename: "frac.png",
-            tex: "\\frac{x}{y}",
-        },
-        {
-            filename: "quadratic_formula.png",
-            tex: "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}",
-        },
-    ];
+    const tests = Object.keys(testData)
+        .filter(key => typeof testData[key] === "string")
+        .map(key => {
+            return {
+                filename: `${key}.png`,
+                tex: testData[key],
+            };
+        });
+    
+    // TODO(kevinb): use https://github.com/typekit/webfontloader
+    // to force fonts to be loaded before running tests
+    tests.unshift({
+        filename: "throwaway.png",
+        tex: "\\frac{x}{y}",
+    });
 
     // TODO(kevinb): split this up into render and screenshotting functionality
     // this will allow us to eventually inject logic to simulate events and then
@@ -30,7 +31,12 @@ function startTest() {
             try {
                 katex.render(tex, container);
                 setTimeout(() => {
-                    const bounds = container.getBoundingClientRect();
+                    const bounds = {
+                        left: 0,
+                        top: 0,
+                        width: window.innerWidth,
+                        height: window.innerHeight,
+                    };
                     frametalk.request(window, "take-screenshot", {
                         filename: filename,
                         bounds: bounds,
@@ -38,8 +44,9 @@ function startTest() {
                         container.innerHTML = "";
                         resolve();
                     });
-                }, 0);
+                }, 25); // wait a little bit for the browser to finish painting
             } catch (e) {
+                console.warn(`error rendering: ${tex}`);
                 // TODO(kevinb): communicate failures back to the test runner
                 resolve();
             }
