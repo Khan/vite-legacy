@@ -2,6 +2,7 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const PNGCrop = require("png-crop");
+var robot = require("robotjs");
 
 const app = express();
 
@@ -30,6 +31,33 @@ app.post("/screenshot", (req, res) => {
     });
 
     res.send("okay");
+});
+
+// Speed up the mouse.
+robot.setMouseDelay(10);
+
+app.post("/playback", (req, res) => {
+    res.send("okay");
+
+    const {offsetX, offsetY} = req.body;
+    const event = req.body.events[0];
+    robot.moveMouse(event.clientX + offsetX, event.clientY + offsetY);
+
+    for (const event of req.body.events) {
+        switch (event.type) {
+            case "mousedown":
+                robot.mouseToggle("down");
+                break;
+            case "mouseup":
+                robot.mouseToggle("up");
+                break;
+            case "mousemove":
+                robot.moveMouse(event.clientX + offsetX, event.clientY + offsetY);
+                break;
+            default:
+                break;
+        }
+    }
 });
 
 app.listen(3000, () => console.log("listening on port 3000"));

@@ -14,7 +14,8 @@
   "dependencies": {
     "express": "^4.16.3",
     "frametalk": "https://github.com/Khan/frametalk.git#uniqid",
-    "png-crop": "^0.0.2"
+    "png-crop": "^0.0.2",
+    "robotjs": "^0.5.1"
   },
   "devDependencies": {
     "aphrodite": "^2.2.2",

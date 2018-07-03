@@ -21,6 +21,25 @@ module.exports = [
         mode: "development"
     },
     {
+        entry: './recorder/src/index.js',
+        output: {
+            path: path.resolve(__dirname, 'recorder/dist'),
+            filename: 'bundle.js'
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.js$/,
+                    exclude: /(node_modules|bower_components)/,
+                    use: {
+                        loader: 'babel-loader',
+                    }
+                }
+            ]
+        },
+        mode: "development"
+    },
+    {
         entry: './demos/react/src/index.js',
         output: {
             path: path.resolve(__dirname, 'demos/react/dist'),
