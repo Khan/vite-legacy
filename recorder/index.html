@@ -1,6 +1,37 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <style>
+            #square {
+                position: absolute;
+                left: 100px;
+                top: 200px;
+                width: 200px;
+                height: 200px;
+                background-color: cyan;
+            }
+
+            #header {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+
+            button {
+                font-size: 24px;
+                margin: 24px;
+            }
+        </style>
+    </head>
     <body>
+        <canvas id="canvas"></canvas>
+        <div id="square"></div>
+        <div id="header">
+            <h1>STANDBY</h1>
+            <button>Foo</button>
+            <button>Bar</button>
+            <button>Baz</button>
+        </div>
         <script src="dist/bundle.js"></script>
     </body>
 </html>

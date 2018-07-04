@@ -4,7 +4,7 @@
  */
 document.body.style.margin = "0";
 
-const canvas = document.createElement("canvas");
+const canvas = document.querySelector("#canvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 canvas.style.display = "block";
@@ -20,37 +20,18 @@ const randomColor = () => {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
-document.body.appendChild(canvas);
-
 let down = false;
 let prevPoint = null;
-let events = [];
-
-let playback = false;
 
 document.addEventListener("mousedown", (e) => {
     ctx.strokeStyle = randomColor();
-    if (playback) {
-        console.log(e);
-    }
-    console.log(`down = ${down}`);
     down = true;
     prevPoint = {x: e.clientX, y: e.clientY};
-    events = [{
-        type: "mousedown",
-        clientX: e.clientX,
-        clientY: e.clientY,
-    }];
 });
 
 document.addEventListener("mousemove", (e) => {
     if (down) {
         const point = {x: e.clientX, y: e.clientY};
-        events.push({
-            type: "mousemove",
-            clientX: e.clientX,
-            clientY: e.clientY,
-        });
         ctx.beginPath();
         ctx.moveTo(prevPoint.x, prevPoint.y);
         ctx.lineTo(point.x, point.y);
@@ -60,16 +41,8 @@ document.addEventListener("mousemove", (e) => {
 });
 
 document.addEventListener("mouseup", (e) => {
-    if (playback) {
-        console.log(e);
-    }
     if (down) {
         const point = {x: e.clientX, y: e.clientY};
-        events.push({
-            type: "mouseup",
-            clientX: e.clientX,
-            clientY: e.clientY,
-        });
         ctx.beginPath();
         ctx.moveTo(prevPoint.x, prevPoint.y);
         ctx.lineTo(point.x, point.y);
@@ -77,27 +50,116 @@ document.addEventListener("mouseup", (e) => {
         prevPoint = point;
 
         down = false;
+    }
+});
 
-        if (!playback) {
-            setTimeout(() => {
-                playback = true;
-                fetch("http://localhost:3000/playback", {
-                    method: "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        offsetX: window.screenX,
-                        offsetY: window.screenY + (window.outerHeight - window.innerHeight),
-                        events: events,
-                    }),
-                }).then(() => {
-                    console.log("playback started");
-                });
-            }, 100);
-        } else {
-            playback = false;
-        }
+const square = document.querySelector("#square");
+square.addEventListener("mouseenter", () => {
+    square.style.backgroundColor = "magenta";
+});
+
+square.addEventListener("mouseleave", () => {
+    square.style.backgroundColor = "cyan";
+});
+
+square.addEventListener("mousedown", () => {
+    square.style.backgroundColor = "yellow";
+});
+
+square.addEventListener("mouseup", () => {
+    square.style.backgroundColor = "magenta";
+});
+
+let capsLock = false;
+let events = [];
+
+const h1 = document.querySelector("h1");
+
+document.addEventListener("keydown", (e) => {
+    console.log(e.keyCode);
+    if (e.keyCode === 20) {
+        capsLock = true;
+        events = [];
+        h1.innerText = "RECORD";
+    } else if (e.keyCode === 16) {
+        events.push({
+            type: "keydown",
+            key: "shift",
+        });
+    } else if (e.keyCode === 9) {
+        events.push({
+            type: "keydown",
+            key: "tab",
+        });
+    }
+});
+
+document.addEventListener("keyup", (e) => {
+    if (capsLock && e.keyCode === 20) {
+        console.log(`capsLock = ${capsLock}`);
+        console.log(events);
+        capsLock = false;
+
+        h1.innerText = "STANDBY";
+
+        setTimeout(() => {
+            h1.innerText = "PLAYBACK";
+
+            fetch("http://localhost:3000/playback", {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    offsetX: window.screenX,
+                    offsetY: window.screenY + (window.outerHeight - window.innerHeight),
+                    events: events,
+                }),
+            }).then(() => {
+                h1.innerText = "STANDBY";
+            });
+        }, 500);
+
+    } else if (e.keyCode === 16) {
+        events.push({
+            type: "keyup",
+            key: "shift",
+        });
+    } else if (e.keyCode === 9) {
+        events.push({
+            type: "keyup",
+            key: "tab",
+        });
+    }
+});
+
+document.addEventListener("mousemove", (e) => {
+    if (capsLock) {
+        events.push({
+            type: "mousemove",
+            clientX: e.clientX,
+            clientY: e.clientY,
+        });
+    }
+});
+
+document.addEventListener("mousedown", (e) => {
+    if (capsLock) {
+        events.push({
+            type: "mousedown",
+            clientX: e.clientX,
+            clientY: e.clientY,
+        });
+    }
+});
+
+document.addEventListener("mouseup", (e) => {
+    if (capsLock) {
+        events.push({
+            type: "mouseup",
+            clientX: e.clientX,
+            clientY: e.clientY,
+        });
     }
 });

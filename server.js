@@ -34,30 +34,58 @@ app.post("/screenshot", (req, res) => {
 });
 
 // Speed up the mouse.
-robot.setMouseDelay(10);
+robot.setMouseDelay(15);
+robot.setKeyboardDelay(500);
+
+const modifiers = {
+    shift: false,
+    alt: false,
+    control: false,
+}
+let shift = false;
+
+const getActiveModifiers = () => {
+    return Object.keys(modifiers).filter(key => modifiers[key]);
+}
 
 app.post("/playback", (req, res) => {
-    res.send("okay");
-
     const {offsetX, offsetY} = req.body;
-    const event = req.body.events[0];
-    robot.moveMouse(event.clientX + offsetX, event.clientY + offsetY);
 
     for (const event of req.body.events) {
         switch (event.type) {
             case "mousedown":
+                robot.moveMouse(event.clientX + offsetX, event.clientY + offsetY);
                 robot.mouseToggle("down");
                 break;
             case "mouseup":
+                robot.moveMouse(event.clientX + offsetX, event.clientY + offsetY);
                 robot.mouseToggle("up");
                 break;
             case "mousemove":
                 robot.moveMouse(event.clientX + offsetX, event.clientY + offsetY);
                 break;
+            case "keydown":
+                // TODO(kevinb): add a formal debug mode
+                console.log(`${event.key} down`);
+                if (event.key in modifiers) {
+                    modifiers[event.key] = true;
+                } else {
+                    robot.keyToggle(event.key, "down", getActiveModifiers());
+                }
+                break;
+            case "keyup":
+                console.log(`${event.key} up`);
+                if (event.key in modifiers) {
+                    modifiers[event.key] = false;
+                } else {
+                    robot.keyToggle(event.key, "up", getActiveModifiers());
+                }
             default:
                 break;
         }
     }
+
+    res.send("okay");
 });
 
 app.listen(3000, () => console.log("listening on port 3000"));
