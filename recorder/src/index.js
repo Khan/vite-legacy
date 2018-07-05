@@ -163,3 +163,40 @@ document.addEventListener("mouseup", (e) => {
         });
     }
 });
+
+let i = 0;
+const takeScreenshot = (element) => {
+    const bounds = element.getBoundingClientRect();
+    const titlebarHeight = window.outerHeight - window.innerHeight;
+
+    fetch("http://localhost:3000/screenshot2", {
+        method: "POST",
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            filename: `square_${i++}.png`,
+            bounds: {
+                x: window.screenX + bounds.left,
+                y: window.screenY + titlebarHeight + bounds.top,
+                width: bounds.width,
+                height: bounds.height,
+            },
+        }),
+    })
+}
+
+// take initial screenshot on page load
+takeScreenshot(square);
+
+// take additional screenshots on DOM mutations
+const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        takeScreenshot(square);
+    });
+});
+
+const config = { attributes: true, childList: true, characterData: true }
+
+observer.observe(square, config);
