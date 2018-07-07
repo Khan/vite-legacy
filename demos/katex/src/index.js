@@ -40,7 +40,7 @@ function startTest() {
 
                     const titlebarHeight = window.outerHeight - window.innerHeight;
                 
-                    fetch("http://localhost:3000/screenshot2", {
+                    fetch("http://localhost:3000/screenshot", {
                         method: "POST",
                         headers: {
                             'Accept': 'application/json',
