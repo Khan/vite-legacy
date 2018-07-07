@@ -37,16 +37,30 @@ function startTest() {
     // TODO(kevinb): split this up into render and screenshotting functionality
     // this will allow us to eventually inject logic to simulate events and then
     // take additional screenshots whenever the DOM changes.
-    function renderElement(element, filename) {
+    function renderElement(element, filename) {    
         return new Promise((resolve, reject) => {
             try {
                 ReactDOM.render(element, container, () => {
                     // wait for styles to be applied
                     setTimeout(() => {
                         const bounds = container.getBoundingClientRect();
-                        frametalk.request(window, "take-screenshot", {
-                            filename: filename,
-                            bounds: bounds,
+                        const titlebarHeight = window.outerHeight - window.innerHeight;
+                
+                        fetch("http://localhost:3000/screenshot2", {
+                            method: "POST",
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                filename: filename,
+                                bounds: {
+                                    x: window.screenX + bounds.left,
+                                    y: window.screenY + titlebarHeight + bounds.top,
+                                    width: bounds.width,
+                                    height: bounds.height,
+                                },
+                            }),
                         }).then(() => {
                             ReactDOM.unmountComponentAtNode(container);
                             resolve();

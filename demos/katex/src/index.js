@@ -37,9 +37,24 @@ function startTest() {
                         width: window.innerWidth,
                         height: window.innerHeight,
                     };
-                    frametalk.request(window, "take-screenshot", {
-                        filename: filename,
-                        bounds: bounds,
+
+                    const titlebarHeight = window.outerHeight - window.innerHeight;
+                
+                    fetch("http://localhost:3000/screenshot2", {
+                        method: "POST",
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            filename: filename,
+                            bounds: {
+                                x: window.screenX + bounds.left,
+                                y: window.screenY + titlebarHeight + bounds.top,
+                                width: bounds.width,
+                                height: bounds.height,
+                            },
+                        }),
                     }).then(() => {
                         container.innerHTML = "";
                         resolve();
