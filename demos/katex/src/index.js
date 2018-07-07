@@ -81,8 +81,4 @@ function startTest() {
     });
 }
 
-frametalk.on("start-test", (event, data) => {
-    setTimeout(() => {
-        startTest();
-    }, 100);
-});
+startTest();
