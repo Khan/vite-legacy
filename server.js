@@ -5,6 +5,8 @@ const PNGCrop = require("png-crop");
 const child_process = require("child_process");
 const robot = require("robotjs");
 const {transform} = require("sucrase");
+const glob = require("glob");
+const matchAll = require("match-all");
 
 const cjs2es = require("./cjs2es.js");
 
@@ -126,6 +128,71 @@ app.get("/node_modules/:module", (req, res) => {
             modules[name] = code;
         });
     }
+});
+
+const fixtureDir = 'demos/react/fixtures';
+
+app.get('/fixtures', (req, res) => {
+    const fixtures = fs.readdirSync(fixtureDir);
+
+    res.type('json');
+    res.send(fixtures);
+});
+
+const componentMap = {};
+const componentPaths = glob.sync("demos/react/src/components/**/*.js");
+
+for (const compPath of componentPaths) {
+    const code = fs.readFileSync(compPath).toString();
+    const exportDefaultRegex = /export default class ([a-zA-Z]+) extends/g;
+    const match = exportDefaultRegex.exec(code);
+    const name = match[1];
+    componentMap[name] = "/" + compPath;
+}
+
+app.get('/fixtures/*.js', (req, res) => {
+    const filename = path.join(
+        fixtureDir, 
+        path.relative('fixtures', req.path.slice(1)),
+    );
+
+    if (!fs.existsSync(filename)) {
+        console.log(`${filename} doesn't exist`);
+        res.status(404);
+        res.end();
+    }
+
+    // TODO(kevinb): cache compiled code and update cache when code changes
+    console.log(`serving: ${filename}`);
+    const fixture = fs.readFileSync(filename).toString();
+
+    const matches = matchAll(fixture, /<([A-Z][a-zA-Z]*)/g).toArray();
+    
+    // check that all components in the fixture exist
+    if (!matches.every(name => name in componentMap)) {
+        // TODO(kevinb): improve error reporting
+        res.status(500);
+        res.end();
+    }
+
+    const uniqueMatches = new Set(matches);
+    const imports = [...uniqueMatches].map(name =>
+        `import ${name} from "${componentMap[name]}"`);
+
+    src = [
+        `\nimport * as React from "react";`,
+        ...imports,
+        `export default ${fixture}`,
+    ].join('\n');
+
+    // rewrite imports of node modules to be imports from /node_modules/<module_name>
+    const code = src.replace(/from\s+\"([^\"\.\/][^\"]+)\"/g, (match, group1, offset, string) => {
+        return `from "/node_modules/${group1}"`;
+    });
+
+    const compiledCode = transform(code, {transforms: ['jsx', 'flow']}).code;
+    res.type('js');
+    res.send(compiledCode);
 });
 
 // compile all JS files with sucrase to get convert JSX to plain JS
