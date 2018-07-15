@@ -25,6 +25,7 @@
     "sucrase": "^3.4.1"
   },
   "devDependencies": {
+    "@khanacademy/wonder-blocks-button": "^1.0.1",
     "aphrodite": "^2.2.2",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.4",
@@ -33,6 +34,7 @@
     "katex": "^0.10.0-beta",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
+    "react-router-dom": "^4.3.1",
     "webpack": "^4.14.0",
     "webpack-cli": "^3.0.8"
   }

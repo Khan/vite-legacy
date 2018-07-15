@@ -130,6 +130,31 @@ app.get("/node_modules/:module", (req, res) => {
     }
 });
 
+app.get("/node_modules/:scope/:module", (req, res) => {
+    const name = req.params.module;
+    const scope = req.params.scope;
+    const filename = path.join('node_modules', scope, name);
+
+    if (!fs.existsSync(filename)) {
+        console.log(`${filename} doesn't exist`);
+        res.status(404);
+        res.end();
+    }
+
+    console.log(`serving: ${scope}/${name}`);
+    if (name in modules) {
+        res.type('js');
+        res.send(modules[`${scope}/${name}`]);
+    } else {
+        // TODO(kevinb): update cached module if code changes
+        cjs2es(`${scope}/${name}`).then(code => {
+            res.type('js');
+            res.send(code);
+            modules[`${scope}/${name}`] = code;
+        });
+    }
+});
+
 const fixtureDir = 'demos/react/fixtures';
 
 app.get('/fixtures', (req, res) => {

@@ -16,7 +16,7 @@ async function screenshot(domElement, filename) {
     const bounds = domElement.getBoundingClientRect();
     const titlebarHeight = window.outerHeight - window.innerHeight;
 
-    await fetch("http://localhost:3000/screenshot", {
+    await fetch("/screenshot", {
         method: "POST",
         headers: {
             'Accept': 'application/json',
@@ -49,7 +49,7 @@ async function renderFixture(name) {
 }
 
 async function runTests() {
-    const res = await fetch("http://localhost:3000/fixtures");
+    const res = await fetch("/fixtures");
     const fixtures = await res.json();
     for (const fixture of fixtures) {
         await renderFixture(fixture);
