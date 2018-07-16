@@ -12,6 +12,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "command-exists": "^1.2.7",
     "express": "^4.16.3",
     "frametalk": "https://github.com/Khan/frametalk.git#uniqid",
     "glob": "^7.1.2",

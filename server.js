@@ -7,6 +7,7 @@ const robot = require("robotjs");
 const {transform} = require("sucrase");
 const glob = require("glob");
 const matchAll = require("match-all");
+const commandExists = require("command-exists").sync;
 
 const cjs2es = require("./cjs2es.js");
 
@@ -85,15 +86,32 @@ app.post("/playback", (req, res) => {
     });
 });
 
+let screenshotCmd = null;
+if (commandExists("screencapture")) {
+    screenshotCmd = "screencapture";
+} else if (commandExists("import")) {
+    screenshotCmd = "import";
+}
+
 app.post("/screenshot", (req, res) => {
     const {bounds, filename} = req.body;
     const path = `screenshots/${filename}`;
     const {x, y, width, height} = bounds;
+
+    let cmd = null;
+    if (screenshotCmd === "screencapture") {
+        cmd = `${screenshotCmd} -R${x},${y},${width},${height} ${path}`;
+    } else if (screenshotCmd === "import") {
+        cmd = `${screenshotCmd} -window root -crop ${width}x${height}+${x}+${y} ${path}`;
+    } else {
+        res.status(500);
+        res.end();
+    }
+
     console.log(`saving: ${path}`);
     console.log(bounds);
-    // TODO(kevinb): use shutter on linux
-    const cmd = `screencapture -R${x},${y},${width},${height} ${path}`;
     console.log(cmd);
+
     child_process.exec(cmd, (err, stdout, stderr) => {
         if (err) {
             res.send("failed");
