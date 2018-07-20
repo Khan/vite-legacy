@@ -7,11 +7,25 @@ async function sleep(duration = 0) {
     });
 }
 
+async function simulate(event) {
+    await fetch("http://localhost:3000/simulate", {
+        method: "POST",
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            offsetX: window.screenX,
+            offsetY: window.screenY + (window.outerHeight - window.innerHeight),
+            event: event,
+        }),
+    });
+}
+
+let container;
+
 async function render(element) {
     return new Promise((resolve, reject) => {
-        const container = document.createElement("div");
-        container.style.display = "inline-block";
-        document.body.appendChild(container);
         ReactDOM.render(element, container, () => {
             setTimeout(() => resolve(container), 0);
         });
@@ -20,16 +34,24 @@ async function render(element) {
 
 async function runTests(tests) {
     for (const test of tests) {
+        container = document.createElement("div");
+        container.style.display = "inline-block";
+        document.body.appendChild(container);
         await test.run();
+        ReactDOM.unmountComponentAtNode(container);
+        document.body.removeChild(container);
+        await sleep();
     }
 }
 
 let index = 0;
 function expect(domElement) {
     return {
-        toMatchScreenshot: async () => {
+        toMatchScreenshot: async (options = {}) => {
             const bounds = domElement.getBoundingClientRect();
             const titlebarHeight = window.outerHeight - window.innerHeight;
+
+            const outset = options.outset || 0;
 
             await fetch("/screenshot", {
                 method: "POST",
@@ -40,10 +62,10 @@ function expect(domElement) {
                 body: JSON.stringify({
                     filename: `button.${index++}.png`,
                     bounds: {
-                        x: window.screenX + bounds.left,
-                        y: window.screenY + titlebarHeight + bounds.top,
-                        width: bounds.width,
-                        height: bounds.height,
+                        x: window.screenX + bounds.left - outset,
+                        y: window.screenY + titlebarHeight + bounds.top - outset,
+                        width: bounds.width + 2 * outset,
+                        height: bounds.height + 2 * outset,
                     },
                 }),
             })
@@ -72,6 +94,10 @@ function describe(title, callback) {
 describe("Button", () => {
     test("primary", async () => {
         const element = await render(<Button>Hello, world!</Button>);
+        await expect(element).toMatchScreenshot();
+        await simulate({type: "mousemove", clientX: 50, clientY: 25});
+        await expect(element).toMatchScreenshot({outset: 4});
+        await simulate({type: "mousedown"});
         await expect(element).toMatchScreenshot();
     });
 

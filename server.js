@@ -86,6 +86,18 @@ app.post("/playback", (req, res) => {
     });
 });
 
+app.post("/simulate", (req, res) => {
+    const {offsetX, offsetY, event} = req.body;
+
+    if (event.type === "mousemove") {
+        robot.moveMouse(event.clientX + offsetX, event.clientY + offsetY);
+        res.send("okay");
+    } else if (event.type === "mousedown") {
+        robot.mouseToggle("down");
+        res.send("okay");
+    }
+});
+
 let screenshotCmd = null;
 if (commandExists("screencapture")) {
     screenshotCmd = "screencapture";
