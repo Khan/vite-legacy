@@ -34,25 +34,11 @@ async function screenshot(domElement, filename) {
     })
 }
 
-async function renderFixture(name) {
-    const fixture = await import(`/fixtures/${name}`);
-
-    const container = document.createElement("div");
-    container.style.display = "inline-block";
-    document.body.appendChild(container);
-
-    await renderReactElement(fixture.default, container);
-    await sleep();
-    await screenshot(container, `${name}.png`);
-    
-    ReactDOM.unmountComponentAtNode(container);
-}
-
 async function runTests() {
     const res = await fetch("/fixtures");
     const fixtures = await res.json();
     for (const fixture of fixtures) {
-        await renderFixture(fixture);
+        await import(`/fixtures/${fixture}`);
     }
 }
 

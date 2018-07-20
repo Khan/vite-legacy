@@ -208,24 +208,10 @@ app.get('/fixtures/*.js', (req, res) => {
     // TODO(kevinb): cache compiled code and update cache when code changes
     console.log(`serving: ${filename}`);
     const fixture = fs.readFileSync(filename).toString();
-
-    const matches = matchAll(fixture, /<([A-Z][a-zA-Z]*)/g).toArray();
     
-    // check that all components in the fixture exist
-    if (!matches.every(name => name in componentMap)) {
-        // TODO(kevinb): improve error reporting
-        res.status(500);
-        res.end();
-    }
-
-    const uniqueMatches = new Set(matches);
-    const imports = [...uniqueMatches].map(name =>
-        `import ${name} from "${componentMap[name]}"`);
-
     src = [
         `\nimport * as React from "react";`,
-        ...imports,
-        `export default ${fixture}`,
+        fixture,
     ].join('\n');
 
     // rewrite imports of node modules to be imports from /node_modules/<module_name>
