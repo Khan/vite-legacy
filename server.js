@@ -95,6 +95,16 @@ app.post("/simulate", (req, res) => {
     } else if (event.type === "mousedown") {
         robot.mouseToggle("down");
         res.send("okay");
+    } else if (event.type === "keydown") {
+        robot.keyToggle(event.key, "down");
+        res.send("okay");
+    } else if (event.type === "keyup") {
+        robot.keyToggle(event.key, "up");
+        res.send("okay");
+    } else if (event.type === "keypress") {
+        robot.keyToggle(event.key, "down");
+        robot.keyToggle(event.key, "up");
+        res.send("okay");
     }
 });
 

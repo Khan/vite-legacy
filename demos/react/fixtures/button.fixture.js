@@ -101,6 +101,12 @@ describe("Button", () => {
         await expect(element).toMatchScreenshot();
     });
 
+    test("primary, tab to focus", async () => {
+        const element = await render(<Button>Hello, world!</Button>);
+        await simulate({type: "keypress", key: "tab"});
+        await expect(element).toMatchScreenshot({outset: 4});
+    });
+
     test("secondary", async () => {
         const element = await render(<Button kind="secondary">Hello, world!</Button>);
         await expect(element).toMatchScreenshot();
