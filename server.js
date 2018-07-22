@@ -3,7 +3,6 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-const PNGCrop = require("png-crop");
 const child_process = require("child_process");
 const robot = require("robotjs");
 const {transform} = require("sucrase");
