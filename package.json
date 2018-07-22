@@ -2,7 +2,7 @@
   "name": "vite",
   "version": "0.0.1",
   "description": "visual interactive test environment",
-  "main": "client.js",
+  "main": "server.js",
   "scripts": {
     "build": "webpack",
     "watch": "webpack -w",
