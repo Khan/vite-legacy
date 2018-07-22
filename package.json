@@ -4,8 +4,6 @@
   "description": "visual interactive test environment",
   "main": "server.js",
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack -w",
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -28,19 +26,5 @@
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-replace": "^2.0.0",
     "sucrase": "^3.4.1"
-  },
-  "devDependencies": {
-    "@khanacademy/wonder-blocks-button": "^1.0.1",
-    "aphrodite": "^2.2.2",
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.4",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-react": "^6.24.1",
-    "katex": "^0.10.0-beta",
-    "react": "^16.4.1",
-    "react-dom": "^16.4.1",
-    "react-router-dom": "^4.3.1",
-    "webpack": "^4.14.0",
-    "webpack-cli": "^3.0.8"
   }
 }
