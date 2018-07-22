@@ -5,21 +5,13 @@ const commonjs = require('rollup-plugin-commonjs');
 const nodeResolve = require('rollup-plugin-node-resolve');
 const replace = require('rollup-plugin-replace');
 const assert = require('assert');
+const resolve = require('resolve');
 
-const getEntry = (moduleName) => {
-    const pkgJsonPath = path.join('node_modules', moduleName, 'package.json');
-    if (!fs.existsSync(pkgJsonPath)) {
-        return null;
-    }
-    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath));
-    const main = pkgJson.main;
-    assert(main);
-    return path.join('node_modules', moduleName, main);
-};
+console.log(`basedir = ${process.cwd()}`);
 
 async function build(moduleName) {
-    const entry = getEntry(moduleName);
-    const mod = require(moduleName);
+    const entry = resolve.sync(moduleName, {basedir: process.cwd()});
+    const mod = require(entry);
 
     const inputOptions = {
         input: entry,
@@ -30,7 +22,6 @@ async function build(moduleName) {
                 browser: true,
             }),
             commonjs({
-                include: 'node_modules/**',
                 namedExports: {
                     [entry]: moduleName.startsWith("react") ? Object.keys(mod) : [],
                 },
@@ -50,7 +41,7 @@ async function build(moduleName) {
 
     // generate code and a sourcemap
     const {code, map} = await bundle.generate(outputOptions);
-  
+
     return code;
 }
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -95,6 +97,13 @@ app.post("/simulate", (req, res) => {
     } else if (event.type === "mousedown") {
         robot.mouseToggle("down");
         res.send("okay");
+    } else if (event.type === "mouseup") {
+        robot.mouseToggle("up");
+        res.send("okay");
+    } else if (event.type === "click") {
+        robot.mouseToggle("down");
+        robot.mouseToggle("up");
+        res.send("okay");
     } else if (event.type === "keydown") {
         robot.keyToggle(event.key, "down");
         res.send("okay");
@@ -115,30 +124,31 @@ if (commandExists("screencapture")) {
     screenshotCmd = "import";
 }
 
+const config = require(path.join(process.cwd(), "config.json"));
+
 app.post("/screenshot", (req, res) => {
-    const {bounds, filename} = req.body;
-    const path = `screenshots/${filename}`;
+    const {bounds} = req.body;
+    const filename = path.join(process.cwd(), config.screenshots, req.body.filename);
     const {x, y, width, height} = bounds;
 
     let cmd = null;
     if (screenshotCmd === "screencapture") {
-        cmd = `${screenshotCmd} -R${x},${y},${width},${height} ${path}`;
+        cmd = `${screenshotCmd} -R${x},${y},${width},${height} ${filename}`;
     } else if (screenshotCmd === "import") {
-        cmd = `${screenshotCmd} -window root -crop ${width}x${height}+${x}+${y} ${path}`;
+        cmd = `${screenshotCmd} -window root -crop ${width}x${height}+${x}+${y} ${filename}`;
     } else {
         res.status(500);
         res.end();
     }
 
-    console.log(`saving: ${path}`);
+    console.log(`saving: ${req.body.filename}`);
     console.log(bounds);
-    console.log(cmd);
 
     child_process.exec(cmd, (err, stdout, stderr) => {
         if (err) {
             res.send("failed");
         } else {
-            res.send(`screenshot saved to ${path}`);
+            res.send(`screenshot saved to ${req.body.filename}`);
         }
     });
 });
@@ -195,29 +205,17 @@ app.get("/node_modules/:scope/:module", (req, res) => {
     }
 });
 
-const fixtureDir = 'demos/react/fixtures';
-
 app.get('/fixtures', (req, res) => {
-    const fixtures = fs.readdirSync(fixtureDir);
+    const fixtures = fs.readdirSync(config.fixtures);
+    console.log(`fixtures: ${fixtures.join(', ')}`);
 
     res.type('json');
     res.send(fixtures);
 });
 
-const componentMap = {};
-const componentPaths = glob.sync("demos/react/src/components/**/*.js");
-
-for (const compPath of componentPaths) {
-    const code = fs.readFileSync(compPath).toString();
-    const exportDefaultRegex = /export default class ([a-zA-Z]+) extends/g;
-    const match = exportDefaultRegex.exec(code);
-    const name = match[1];
-    componentMap[name] = "/" + compPath;
-}
-
 app.get('/fixtures/*.js', (req, res) => {
     const filename = path.join(
-        fixtureDir, 
+        config.fixtures, 
         path.relative('fixtures', req.path.slice(1)),
     );
 
