@@ -23,11 +23,12 @@ async function build(moduleName) {
             }),
             commonjs({
                 namedExports: {
-                    [entry]: moduleName.startsWith("react") ? Object.keys(mod) : [],
+                    [entry]: Object.keys(mod).filter(key => key !== "default"),
                 },
             }),
             replace({
-                'process.env.NODE_ENV': JSON.stringify('production')
+                'process.env.NODE_ENV': JSON.stringify('production'),
+                'window.navigator.userAgent': JSON.stringify('fake_user_agent'),
             }),
         ],
     };
