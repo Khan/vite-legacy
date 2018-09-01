@@ -153,10 +153,10 @@ app.post("/screenshot", (req, res) => {
 
 const modules = {};
 
-// compile node modules on the fly to ES6 modules
-app.get("/node_modules/:module", (req, res) => {
-    const name = req.params.module;
-    const filename = path.join('node_modules', name);
+const serveModule = (res, name) => {
+    const filename = name === "@khanacademy/vite-helpers"
+        ? path.join(__dirname, "helpers.js")
+        : path.join('node_modules', name);
 
     if (!fs.existsSync(filename)) {
         console.log(`${filename} doesn't exist`);
@@ -169,51 +169,31 @@ app.get("/node_modules/:module", (req, res) => {
         res.type('js');
         res.send(modules[name]);
     } else {
-        // TODO(kevinb): update cached module if code changes
-        cjs2es(req.params.module).then(code => {
+        if (name === "@khanacademy/vite-helpers") {
+            const src = fs.readFileSync(filename).toString();
             res.type('js');
-            res.send(code);
-            modules[name] = code;
-        });
+            res.send(compile(src));
+        } else {
+            // TODO(kevinb): update cached module if code changes
+            cjs2es(name).then(code => {
+                res.type('js');
+                res.send(code);
+                modules[name] = code;
+            });
+        }
     }
+}
+
+// compile node modules on the fly to ES6 modules
+app.get("/node_modules/:module", (req, res) => {
+    const name = req.params.module;
+    serveModule(res, name);
 });
 
 app.get("/node_modules/:scope/:module", (req, res) => {
     const name = req.params.module;
     const scope = req.params.scope;
-    const filename = scope === "@khanacademy" && name === "vite-helpers"
-        ? path.join(__dirname, "helpers.js")
-        : path.join('node_modules', scope, name);
-
-    if (!fs.existsSync(filename)) {
-        console.log(`${filename} doesn't exist`);
-        res.status(404);
-        res.end();
-    }
-
-    console.log(`serving: ${scope}/${name}`);
-    if (name in modules) {
-        res.type('js');
-        res.send(modules[`${scope}/${name}`]);
-    } else {
-        if (scope === "@khanacademy" && name === "vite-helpers") {
-            // TODO: deduplicate this and the code in the *.js handlers
-            const src = fs.readFileSync(filename).toString();
-            const code = src.replace(/from\s+\"([^\"\.\/][^\"]+)\"/g, (match, group1, offset, string) => {
-                return `from "/node_modules/${group1}"`;
-            });
-            const compiledCode = transform(code, {transforms: ['jsx', 'flow']}).code;
-            res.type('js');
-            res.send(compiledCode);
-        } else {
-            // TODO(kevinb): update cached module if code changes
-            cjs2es(`${scope}/${name}`).then(code => {
-                res.type('js');
-                res.send(code);
-                modules[`${scope}/${name}`] = code;
-            });
-        }
-    }
+    serveModule(res, `${scope}/${name}`);
 });
 
 app.get('/fixtures', (req, res) => {
@@ -224,12 +204,15 @@ app.get('/fixtures', (req, res) => {
     res.send(fixtures);
 });
 
-app.get('/fixtures/*.js', (req, res) => {
-    const filename = path.join(
-        config.fixtures, 
-        path.relative('fixtures', req.path.slice(1)),
-    );
+const compile = (src) => {
+    // rewrite imports of node modules to be imports from /node_modules/<module_name>
+    const code = src.replace(/from\s+\"([^\"\.\/][^\"]+)\"/g, 
+        (match, group1, offset, string) => `from "/node_modules/${group1}"`);
 
+    return transform(code, {transforms: ['jsx', 'flow']}).code;
+}
+
+const serveJsFile = (req, res, filename, srcTransform = (src) => src) => {
     if (!fs.existsSync(filename)) {
         console.log(`${filename} doesn't exist`);
         res.status(404);
@@ -237,22 +220,19 @@ app.get('/fixtures/*.js', (req, res) => {
     }
 
     // TODO(kevinb): cache compiled code and update cache when code changes
-    console.log(`serving: ${filename}`);
-    const fixture = fs.readFileSync(filename).toString();
-    
-    src = [
-        `\nimport * as React from "react";`,
-        fixture,
-    ].join('\n');
-
-    // rewrite imports of node modules to be imports from /node_modules/<module_name>
-    const code = src.replace(/from\s+\"([^\"\.\/][^\"]+)\"/g, (match, group1, offset, string) => {
-        return `from "/node_modules/${group1}"`;
-    });
-
-    const compiledCode = transform(code, {transforms: ['jsx', 'flow']}).code;
+    console.log(`serving: ${req.path} using ${filename}`);
+    const src = fs.readFileSync(filename).toString();
     res.type('js');
-    res.send(compiledCode);
+    res.send(compile(srcTransform(src)));
+}
+
+app.get('/fixtures/*.js', (req, res) => {
+    const filename = path.join(
+        config.fixtures, 
+        path.relative('fixtures', req.path.slice(1)),
+    );
+
+    serveJsFile(req, res, filename, src => `\nimport * as React from "react";\n${src}`);
 });
 
 // compile all JS files with sucrase to get convert JSX to plain JS
@@ -262,25 +242,8 @@ app.get('*.js', (req, res) => {
         ? path.join(__dirname, filename)
         : path.join(process.cwd(), filename);
 
-    if (!fs.existsSync(fullPath)) {
-        console.log(`${fullPath} doesn't exist`);
-        res.status(404);
-        res.end();
-    }
-
-    // TODO(kevinb): cache compiled code and update cache when code changes
-    console.log(`serving: ${filename}`);
-    const src = fs.readFileSync(fullPath).toString();
-
-    // rewrite imports of node modules to be imports from /node_modules/<module_name>
-    const code = src.replace(/from\s+\"([^\"\.\/][^\"]+)\"/g, (match, group1, offset, string) => {
-        return `from "/node_modules/${group1}"`;
-    });
-
-    const compiledCode = transform(code, {transforms: ['jsx', 'flow']}).code;
-    res.type('js');
-    res.send(compiledCode);
-})
+    serveJsFile(req, res, fullPath);
+});
 
 const indexHandler = (req, res) => {
     const filename = req.path.slice(1);
