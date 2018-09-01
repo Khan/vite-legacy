@@ -51,8 +51,8 @@ async function build(moduleName) {
     // rename imports to have an absolute path
     // note: rollup generates 'import Foo from "foo"' statements instead of 
     // 'import * as Foo from "foo"'.
-    return code.replace(/import\s+([a-zA-Z0-9$]+)\s+from\s+['"]([^'"]+)['"]/g, 
-        (match, name, path) => `import * as ${name} from "/node_modules/${path}"`);
+    return code.replace(/\s+from\s+['"]([^'"]+)['"]/g, 
+        (match, path) => ` from "/node_modules/${path}"`);
 }
 
 module.exports = build;

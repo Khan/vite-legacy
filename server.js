@@ -181,7 +181,9 @@ app.get("/node_modules/:module", (req, res) => {
 app.get("/node_modules/:scope/:module", (req, res) => {
     const name = req.params.module;
     const scope = req.params.scope;
-    const filename = path.join('node_modules', scope, name);
+    const filename = scope === "@khanacademy" && name === "vite-helpers"
+        ? path.join(__dirname, "helpers.js")
+        : path.join('node_modules', scope, name);
 
     if (!fs.existsSync(filename)) {
         console.log(`${filename} doesn't exist`);
@@ -194,12 +196,23 @@ app.get("/node_modules/:scope/:module", (req, res) => {
         res.type('js');
         res.send(modules[`${scope}/${name}`]);
     } else {
-        // TODO(kevinb): update cached module if code changes
-        cjs2es(`${scope}/${name}`).then(code => {
+        if (scope === "@khanacademy" && name === "vite-helpers") {
+            // TODO: deduplicate this and the code in the *.js handlers
+            const src = fs.readFileSync(filename).toString();
+            const code = src.replace(/from\s+\"([^\"\.\/][^\"]+)\"/g, (match, group1, offset, string) => {
+                return `from "/node_modules/${group1}"`;
+            });
+            const compiledCode = transform(code, {transforms: ['jsx', 'flow']}).code;
             res.type('js');
-            res.send(code);
-            modules[`${scope}/${name}`] = code;
-        });
+            res.send(compiledCode);
+        } else {
+            // TODO(kevinb): update cached module if code changes
+            cjs2es(`${scope}/${name}`).then(code => {
+                res.type('js');
+                res.send(code);
+                modules[`${scope}/${name}`] = code;
+            });
+        }
     }
 });
 
@@ -245,17 +258,19 @@ app.get('/fixtures/*.js', (req, res) => {
 // compile all JS files with sucrase to get convert JSX to plain JS
 app.get('*.js', (req, res) => {
     const filename = req.path.slice(1);
-    console.log(filename);
+    const fullPath = filename === "index.js"
+        ? path.join(__dirname, filename)
+        : path.join(process.cwd(), filename);
 
-    if (!fs.existsSync(filename)) {
-        console.log(`${filename} doesn't exist`);
+    if (!fs.existsSync(fullPath)) {
+        console.log(`${fullPath} doesn't exist`);
         res.status(404);
         res.end();
     }
 
     // TODO(kevinb): cache compiled code and update cache when code changes
     console.log(`serving: ${filename}`);
-    const src = fs.readFileSync(filename).toString();
+    const src = fs.readFileSync(fullPath).toString();
 
     // rewrite imports of node modules to be imports from /node_modules/<module_name>
     const code = src.replace(/from\s+\"([^\"\.\/][^\"]+)\"/g, (match, group1, offset, string) => {
@@ -267,7 +282,23 @@ app.get('*.js', (req, res) => {
     res.send(compiledCode);
 })
 
-// put static routing last to take care of .html files
-app.use(express.static("."));
+const indexHandler = (req, res) => {
+    const filename = req.path.slice(1);
+    const fullPath = path.join(__dirname, "index.html");
+
+    if (!fs.existsSync(fullPath)) {
+        console.log(`${fullPath} doesn't exist`);
+        res.status(404);
+        res.end();
+    }
+
+    console.log(`serving: ${filename}`);
+    const contents = fs.readFileSync(fullPath).toString();
+    res.type('html');
+    res.send(contents);
+};
+
+app.get('/index.html', indexHandler);
+app.get('/', indexHandler);
 
 app.listen(3000, () => console.log("listening on port 3000"));
