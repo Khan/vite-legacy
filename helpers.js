@@ -45,6 +45,9 @@ export async function runTests() {
         document.body.removeChild(container);
         await sleep();
     }
+    await fetch("http://localhost:3000/finish", {
+        method: "POST",
+    });
 }
 
 const timeout = 500;

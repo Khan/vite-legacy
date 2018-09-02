@@ -204,6 +204,13 @@ app.get('/fixtures', (req, res) => {
     res.send(fixtures);
 });
 
+app.post('/finish', (req, res) => {
+    if (browser) {
+        browser.kill('SIGHUP');
+    }
+    process.exit();
+});
+
 const compile = (src) => {
     // rewrite imports of node modules to be imports from /node_modules/<module_name>
     const code = src.replace(/from\s+\"([^\"\.\/][^\"]+)\"/g, 
@@ -265,3 +272,24 @@ app.get('/index.html', indexHandler);
 app.get('/', indexHandler);
 
 app.listen(3000, () => console.log("listening on port 3000"));
+
+// TODO: check process.platform and start appropriate browser
+let browser;
+
+if (process.platform === "linux") {
+    // TODO: make the browser choice configurable
+    // Linux supports Chromium and Firefox
+    browser = child_process.exec(
+        `chromium-browser --disable-gpu --no-sandbox --start-maximized http://localhost:3000/`,
+        (err, stdout, stderr) => {
+            // TODO: error handling
+        });
+} else if (process.platform === "darwin") {
+    // TODO: make the browser choice configurable
+    // MacOS supports Safari, Chrome, and Firefox
+    child_process.exec(
+        `open -Fna "Safari" http://localhost:3000`, 
+        (err, stdout, stderr) => {
+            // TODO: error handling
+        });
+}

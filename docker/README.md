@@ -1,10 +1,14 @@
 # build docker image
 
-- docker build -t vite .
+From the root directory of this repo, run:
+- docker build -t vite -f docker/Dockerfile .
 
 # run docker
 
+From the root directory of the repo being tested, run:
 - docker run -v `pwd`:/home/under_test vite
 
-NOTE: you'll have to kill the docker container manually
-TODO: have server.js start chromium and exit it automatically when tests finish
+Note: `under_test` must be that exact string.
+
+TODO: add a script to package.json to run the docker.
+TODO: publish the docker image to docker hub.

@@ -6,11 +6,10 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | bash
 RUN apt-get install -y nodejs
 RUN npm i -g yarn
 ENV DISPLAY ":99"
-WORKDIR /home
-RUN git clone https://github.com/khan/vite
+COPY ./ /home/vite
 WORKDIR /home/vite
 RUN yarn install
 RUN yarn link
 WORKDIR /home/under_test
-COPY commands.sh /home/commands.sh
+COPY ./docker/commands.sh /home/commands.sh
 CMD sh ../commands.sh
