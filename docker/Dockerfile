@@ -11,5 +11,3 @@ WORKDIR /home/vite
 RUN yarn install
 RUN yarn link
 WORKDIR /home/under_test
-COPY ./docker/commands.sh /home/commands.sh
-CMD sh ../commands.sh
