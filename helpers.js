@@ -1,6 +1,8 @@
 // TODO: move this into a separate package
 import * as ReactDOM from "react-dom";
 
+const domUpdateTimeout = 20;
+
 export async function sleep(duration = 0) {
     return new Promise((resolve, reject) => {
         setTimeout(resolve, duration);
@@ -20,6 +22,7 @@ export async function simulate(event) {
             event: event,
         }),
     });
+    await sleep(domUpdateTimeout);
 }
 
 let container;
@@ -27,7 +30,7 @@ let container;
 export async function render(element) {
     return new Promise((resolve, reject) => {
         ReactDOM.render(element, container, () => {
-            setTimeout(() => resolve(container), 0);
+            setTimeout(() => resolve(container), domUpdateTimeout);
         });
     });
 }
@@ -50,11 +53,11 @@ export async function runTests() {
     });
 }
 
-const timeout = 500;
+const cssSelectorTimeout = 500;
 
 export async function waitForSelectorToAppear(selector) {
     const start = Date.now();
-    while (Date.now() - start < timeout) {
+    while (Date.now() - start < cssSelectorTimeout) {
         await sleep();
         if (document.querySelector(selector)) {
             return;
@@ -67,7 +70,7 @@ export async function waitForSelectorToAppear(selector) {
 
 export async function waitForSelectorToDisappear(selector) {
     const start = Date.now();
-    while (Date.now() - start < timeout) {
+    while (Date.now() - start < cssSelectorTimeout) {
         await sleep();
         if (!document.querySelector(selector)) {
             return;
@@ -80,7 +83,7 @@ export async function waitForSelectorToDisappear(selector) {
 
 export async function waitForLocationHash(hash) {
     const start = Date.now();
-    while (Date.now() - start < timeout) {
+    while (Date.now() - start < cssSelectorTimeout) {
         await sleep();
         if (window.location.hash === hash) {
             return;
