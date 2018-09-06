@@ -1,7 +1,7 @@
 // TODO: move this into a separate package
 import * as ReactDOM from "react-dom";
 
-const domUpdateTimeout = 20;
+const domUpdateTimeout = 10;
 
 export async function sleep(duration = 0) {
     return new Promise((resolve, reject) => {
@@ -25,6 +25,17 @@ export async function simulate(event) {
     await sleep(domUpdateTimeout);
 }
 
+export async function log(message) {
+    await fetch("http://localhost:3000/log", {
+        method: "POST",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({message}),
+    });
+}
+
 let container;
 
 export async function render(element) {
@@ -38,7 +49,9 @@ export async function render(element) {
 let currentTest = null;
 
 export async function runTests() {
+    const start = Date.now();
     for (const test of tests) {
+        const start = Date.now();
         currentTest = test;
         container = document.createElement("div");
         container.style.display = "inline-block";
@@ -47,7 +60,11 @@ export async function runTests() {
         ReactDOM.unmountComponentAtNode(container);
         document.body.removeChild(container);
         await sleep();
+        const elapsed = Date.now() - start;
+        await log(`test duration: ${elapsed}ms`);
     }
+    const elapsed = Date.now() - start;
+    await log(`total duration: ${elapsed}ms`);
     await fetch("http://localhost:3000/finish", {
         method: "POST",
     });

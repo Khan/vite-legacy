@@ -140,7 +140,6 @@ app.post("/screenshot", (req, res) => {
     }
 
     console.log(`saving: ${req.body.filename}`);
-    console.log(bounds);
 
     child_process.exec(cmd, (err, stdout, stderr) => {
         if (err) {
@@ -149,6 +148,12 @@ app.post("/screenshot", (req, res) => {
             res.send(`screenshot saved to ${req.body.filename}`);
         }
     });
+});
+
+app.post("/log", (req, res) => {
+    const {message} = req.body;
+    console.log(message);
+    res.send("okay");
 });
 
 const modules = {};
