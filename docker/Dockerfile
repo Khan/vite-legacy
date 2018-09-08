@@ -5,7 +5,6 @@ RUN apt-get update && apt-get install -y xvfb chromium-browser curl gnupg git im
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash
 RUN apt-get install -y nodejs
 RUN npm i -g yarn
-ENV DISPLAY ":99"
 COPY ./ /home/vite
 WORKDIR /home/vite
 RUN yarn install

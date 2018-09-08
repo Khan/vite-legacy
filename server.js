@@ -124,7 +124,9 @@ if (commandExists("screencapture")) {
 
 const config = require(path.join(process.cwd(), "config.json"));
 
-app.post("/screenshot", (req, res) => {
+app.post("/screenshot/:display", (req, res) => {
+    const start = Date.now();
+    const display = req.params.display;
     const {bounds} = req.body;
     const filename = path.join(process.cwd(), config.screenshots, req.body.filename);
     const {x, y, width, height} = bounds;
@@ -133,7 +135,7 @@ app.post("/screenshot", (req, res) => {
     if (screenshotCmd === "screencapture") {
         cmd = `${screenshotCmd} -R${x},${y},${width},${height} ${filename}`;
     } else if (screenshotCmd === "import") {
-        cmd = `${screenshotCmd} -window root -crop ${width}x${height}+${x}+${y} ${filename}`;
+        cmd = `${screenshotCmd} -display :${display} -window root -crop ${width}x${height}+${x}+${y} ${filename}`;
     } else {
         res.status(500);
         res.end();
@@ -146,6 +148,8 @@ app.post("/screenshot", (req, res) => {
             res.send("failed");
         } else {
             res.send(`screenshot saved to ${req.body.filename}`);
+            const elapsed = Date.now() - start;
+            console.log(`screenshot took ${elapsed}ms`);
         }
     });
 });
@@ -209,9 +213,10 @@ app.get('/fixtures', (req, res) => {
     res.send(fixtures);
 });
 
-app.post('/finish', (req, res) => {
-    if (browser) {
-        browser.kill('SIGHUP');
+app.post('/finish/:runner', (req, res) => {
+    const runner = req.params.runner;
+    if (browsers[runner]) {
+        browsers[runner].kill('SIGHUP');
     }
     process.exit();
 });
@@ -279,16 +284,23 @@ app.get('/', indexHandler);
 app.listen(3000, () => console.log("listening on port 3000"));
 
 // TODO: check process.platform and start appropriate browser
-let browser;
+const browsers = [];
 
 if (process.platform === "linux") {
+    // TODO: have multiple servers, one for each display
+    robot.setXDisplayName(":98");
     // TODO: make the browser choice configurable
     // Linux supports Chromium and Firefox
-    browser = child_process.exec(
-        `chromium-browser --disable-gpu --no-sandbox --start-maximized http://localhost:3000/`,
+    browsers[0] = child_process.exec(
+        `chromium-browser --display=":98" --disable-gpu --no-sandbox --start-maximized "http://localhost:3000/?runner=0&display=98"`,
         (err, stdout, stderr) => {
             // TODO: error handling
         });
+    // browsers[1] = child_process.exec(
+    //     `chromium-browser --display=":99" --disable-gpu --no-sandbox --start-maximized "http://localhost:3000/?runner=1&display=99"`,
+    //     (err, stdout, stderr) => {
+    //         // TODO: error handling
+    //     });
 } else if (process.platform === "darwin") {
     // TODO: make the browser choice configurable
     // MacOS supports Safari, Chrome, and Firefox

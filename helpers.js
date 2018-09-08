@@ -2,6 +2,19 @@
 import * as ReactDOM from "react-dom";
 
 const domUpdateTimeout = 10;
+const params = new URLSearchParams(location.search);
+
+let zIndex = 0;
+
+async function forceStyleRecalc() {
+    window.getComputedStyle(document.body);
+    await sleep();
+}
+
+async function forceReflow() {
+    document.body.style.zIndex = zIndex++;
+    await sleep();
+}
 
 export async function sleep(duration = 0) {
     return new Promise((resolve, reject) => {
@@ -22,7 +35,7 @@ export async function simulate(event) {
             event: event,
         }),
     });
-    await sleep(domUpdateTimeout);
+    await forceReflow();
 }
 
 export async function log(message) {
@@ -41,7 +54,7 @@ let container;
 export async function render(element) {
     return new Promise((resolve, reject) => {
         ReactDOM.render(element, container, () => {
-            setTimeout(() => resolve(container), domUpdateTimeout);
+            forceReflow().then(() => resolve(container));
         });
     });
 }
@@ -65,7 +78,8 @@ export async function runTests() {
     }
     const elapsed = Date.now() - start;
     await log(`total duration: ${elapsed}ms`);
-    await fetch("http://localhost:3000/finish", {
+    const runner = params.get("runner");
+    await fetch(`http://localhost:3000/finish/${runner}`, {
         method: "POST",
     });
 }
@@ -128,7 +142,9 @@ export function expect(domElement) {
                 counters[title] = 0;
             }
 
-            await fetch("/screenshot", {
+            const display = params.get("display");
+
+            await fetch(`/screenshot/${display}`, {
                 method: "POST",
                 headers: {
                     Accept: "application/json",
